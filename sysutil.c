@@ -260,30 +260,58 @@ size_t writen(int fd, const char *buf, int count)
     return count - nleft;
 }
 
-//读取一行，该行的最大长度是maxline
+/**
+ * recv_peek - 仅仅查看套接字缓冲区中的数据，但是不删除数据
+ * sockfd:套接字描述符
+ * buf:接受缓冲区
+ * len:缓冲区的大小
+ * 成功返回读取的字节数，失败返回-1
+ */
+ssize_t recv_peek(int sockfd, char *buf, size_t len)
+{
+    int ret;
+
+    do {
+        ret = recv(sockfd, buf, len, MSG_PEEK);
+    } while (ret == -1 && errno == EINTR);
+
+    return ret;
+}
+
+/**
+ * readline - 读取一行数据
+ * fd:套接字描述符
+ * buf:缓冲区
+ * maxline:缓冲区的长度
+ * 返回行缓冲区中存放的字节数
+ */
 size_t readline(int fd, char *buf, int maxline)
 {
-    int nleft;
+    int nleft, ret;
     char *pbuf;
-    int ret;
     nleft = maxline;
     pbuf = buf;
-    
     while (nleft > 0) {
-        ret = read(fd, pbuf, 1);
-        if (ret == -1) {
-            if (errno == EINTR)
-                continue;
-            ERR_EXIT("read error");
-        }
+        ret = recv_peek(fd, pbuf, nleft);
+        if (ret == -1)
+            ERR_EXIT("recv error");
 
         if (ret == 0)
             break;
+        
+        for (int i = 0; i < ret; i++) {
+            if (pbuf[i] == '\n') {
+                readn(fd, pbuf, i + 1);
+                nleft -= ret;
+                break;
+            }
+        }
 
-        if (*pbuf == '\n')
-            break;
-        nleft--;
-        pbuf++;
+        //如果没找到'\n'，则读取全部数据
+        readn(fd, pbuf, ret);
+        nleft -= ret;
+        pbuf += ret;
     }
+
     return maxline - nleft;
 }
