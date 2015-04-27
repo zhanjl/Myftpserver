@@ -13,9 +13,13 @@ int tcp_server(const char *host, unsigned short port)
 
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(port);
-
-    if (inet_aton(host, &servaddr.sin_addr) < 0) {
-        ERR_EXIT("inet_aton error");
+    
+    if (host == NULL) {
+        servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    } else {
+        if (inet_aton(host, &servaddr.sin_addr) < 0) {
+            ERR_EXIT("inet_aton error");
+        }
     }
 
     int on = 1;
@@ -81,10 +85,10 @@ void deactivate_nonblock(int fd)
 
 //在waitseconds时间内fd是否可读
 //可读返回0,否则返回-1
-int read_timeout(int fd, unsigned int waitseconds)
-{
+int read_timeout(int fd, unsigned int waitseconds) { 
+
     if (waitseconds <= 0)
-       return 0;
+        return 0;
      
     fd_set  readset;
     FD_ZERO(&readset);
@@ -95,18 +99,15 @@ int read_timeout(int fd, unsigned int waitseconds)
     time.tv_usec = 0;
 
     int ret;
-
-again: ret = select(fd + 1, &readset, NULL, NULL, &time);
-
+    do {
+        ret = select(fd + 1, &readset, NULL, NULL, &time);
+    } while (ret == -1 && errno == EINTR);
+    
     if (ret == 0)   //超时
         return -1;
-
-    if (ret == -1 && errno == EINTR)    //select被中断
-        goto again;
     
-    if (ret == -1)                      //发生其他错误
+    if (ret == -1)           //发生其他错误
         ERR_EXIT("select error");
-
     return 0;
 }
 
@@ -127,15 +128,14 @@ int write_timeout(int fd, unsigned int waitseconds)
 
     int ret;
 
-again: ret = select(fd + 1, NULL, &writeset, NULL, &time);
+    do {
+        ret = select(fd + 1, NULL, &writeset, NULL, &time);
+    } while (ret == -1 && errno == EINTR);
 
     if (ret == 0)   //超时
         return -1;
 
-    if (ret == -1 && errno == EINTR)    //select被中断
-        goto again;
-    
-    if (ret == -1)                      //发生其他错误
+    if (ret == -1 && errno != EINTR)                      //发生其他错误
         ERR_EXIT("select error");
 
     return 0;
@@ -158,6 +158,7 @@ int accept_timeout(int fd, struct sockaddr_in *addr, int waitseconds)
         len = sizeof(*addr);
         ret = accept(fd, (struct sockaddr*)addr, &len);    
     }
+
 
     if (ret == -1)
         ERR_EXIT("accept error");
@@ -192,7 +193,7 @@ int connect_timeout(int fd, struct sockaddr_in *addr, int waitseconds)
         if (res == 0)   //超时
             return -1;
         
-        if (res == -1)          //发生其他错误
+        if (res == -1 && errno != EINTR)          //发生其他错误
             ERR_EXIT("select error");
 
         //res返回1,此时有两种可能，连接建立成功或连接建立失败
@@ -240,7 +241,7 @@ size_t readn(int fd, char *buf, int count)
 //写count个字节的数据
 size_t writen(int fd, const char *buf, int count)
 {
-    char *pbuf = buf;
+    const char *pbuf = buf;
     int nleft, nwrite;
     nleft = count;
     while (nleft > 0) {
@@ -298,8 +299,8 @@ size_t readline(int fd, char *buf, int maxline)
 
         if (ret == 0)
             break;
-        
-        for (int i = 0; i < ret; i++) {
+        int i; 
+        for (i = 0; i < ret; i++) {
             if (pbuf[i] == '\n') {
                 readn(fd, pbuf, i + 1);
                 nleft -= ret;
