@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <pwd.h>
 
 #define ERR_EXIT(m) \
         do { \
