@@ -143,7 +143,7 @@ int write_timeout(int fd, unsigned int waitseconds)
 
 //判断在waitseconds是否有连接到来，有返回已建立连接套接字描述符
 //没有返回-1，fd必须是个监听套接字
-int accept_timeout(int fd, struct sockaddr_in *addr, int waitseconds)
+int accept_time_out(int fd, struct sockaddr_in *addr, int waitseconds)
 {
     int ret;
     ret = read_timeout(fd, waitseconds);
@@ -168,7 +168,7 @@ int accept_timeout(int fd, struct sockaddr_in *addr, int waitseconds)
 
 //在waitseconds是否建立连接，是返回0,否则返回-1
 //如果waitseconds==0,则一直等待connect超时或成功返回
-int connect_timeout(int fd, struct sockaddr_in *addr, int waitseconds)
+int connect_time_out(int fd, struct sockaddr_in *addr, int waitseconds)
 {
     if (waitseconds > 0)
        activate_nonblock(fd); 

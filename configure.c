@@ -1,0 +1,13 @@
+int pasv_enable = 1;
+int port_enable = 1;
+unsigned int listen_port = 9981;
+unsigned int max_clients = 1000;
+unsigned int max_per_ip = 30;
+unsigned int accept_timeout = 60;
+unsigned int connect_timeout = 60;
+unsigned int idle_session_timeout = 10;
+unsigned int download_max_rate = 0;
+unsigned int data_connection_timeout = 900;
+unsigned int local_umask = 000;
+unsigned int upload_max_rate = 0;
+const char *listen_address;

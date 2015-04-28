@@ -1,7 +1,10 @@
 #include "sysutil.h"
 #include "session.h"
-
+#include "parse_conf.h"
+#include "configure.h"
 #define     LISTENPORT      9981
+
+void printconfig();
 int main(int argc, char *argv[])
 {
 
@@ -17,9 +20,12 @@ int main(int argc, char *argv[])
     int connfd;
     pid_t   pid;
     session_t sess;
+    parse_load_file("ftpserver.conf");
+    printf("parse_load_file success\n");
+    printconfig();
     while (1) {
           
-        connfd = accept_timeout(listenfd, NULL, 10);
+        connfd = accept_time_out(listenfd, NULL, 10);
         if (connfd == -1) {
             printf("don't has connection in 10 seconds\n");
             continue;
@@ -38,4 +44,11 @@ int main(int argc, char *argv[])
         }
     }
     return 0;
+}
+void printconfig()
+{
+    printf("pasv_enable = %d\n", pasv_enable);
+    printf("listen_port = %d\n", listen_port);
+    printf("local_umask = %d\n", local_umask);
+    printf("listen_address = %s\n", listen_address);
 }

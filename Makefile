@@ -2,7 +2,7 @@
 CC=gcc
 CFLAGS=-Wall -g
 BIN=FtpServer
-OBJS=main.o sysutil.o session.o ftp_proto.o ftp_nobody.o strutil.o
+OBJS=main.o sysutil.o session.o ftp_proto.o ftp_nobody.o strutil.o configure.o parse_conf.o
 
 $(BIN):$(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@

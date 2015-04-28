@@ -13,6 +13,9 @@ int str_all_space(const char *str);
 //把字符串转化为大写
 void str_upper(char *str);
 
+//把十进制字符串转化为无符号整数
+unsigned int str_dec_to_uint(const char *str);
+
 //把八进制字符串转化为无符号整数
 unsigned int str_octal_to_uint(const char *str);
 #endif //STR_UTIL_H

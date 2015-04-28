@@ -23,7 +23,7 @@ void str_split(const char *str, char *left, char *right, char c)
      } 
     *left = '\0';
 
-    strcpy(right, ptr);
+    strcpy(right, ptr + 1);
 } 
 
 int str_all_space(const char *str)
@@ -47,6 +47,25 @@ void str_upper(char *str)
     }
 }
 
+unsigned int str_dec_to_uint(const char *str)
+{
+    int base;
+    unsigned int res;
+    const char *ptr;
+
+    ptr = str + strlen(str) - 1;
+    base = 1, res = 0;
+
+    while (ptr != str) {
+        res += (*ptr - '0') * base;
+        base *= 10;
+        ptr--;
+    }
+
+    res += (*ptr - '0') * base;
+
+    return res;
+}
 unsigned int str_octal_to_uint(const char *str)
 {
     int base;
@@ -59,6 +78,7 @@ unsigned int str_octal_to_uint(const char *str)
     while (ptr != str) {
         res += (*ptr - '0') * base;
         base *= 8;
+        ptr--;
     }
 
     res += (*ptr - '0') * base;
