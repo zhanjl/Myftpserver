@@ -5,6 +5,11 @@
 int main(int argc, char *argv[])
 {
 
+    if (getuid()) {
+        fprintf(stderr, "the ftpserver must started by root\n");
+        exit(EXIT_FAILURE); 
+    }
+
     int listenfd; 
     listenfd = tcp_server("127.0.0.1", LISTENPORT);
     

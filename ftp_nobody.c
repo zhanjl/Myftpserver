@@ -27,9 +27,10 @@ void set_nobody()
     if ((pw = getpwnam("zhan")) == NULL)
         ERR_EXIT("getpwnam");
 
+    if (setegid(pw->pw_gid) == -1)
+        ERR_EXIT("setegid");
+
     if (seteuid(pw->pw_uid) == -1)
         ERR_EXIT("seteuid");
 
-    if (setegid(pw->pw_gid) == -1)
-        ERR_EXIT("setegid");
 }
