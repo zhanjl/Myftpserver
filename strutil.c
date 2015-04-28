@@ -1,6 +1,5 @@
 #include "strutil.h"
-#include <string.h>
-#include <ctype.h>
+#include "common.h"
 void str_trim_crlf(char *str)
 {
     char *p;

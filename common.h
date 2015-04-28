@@ -13,6 +13,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <ctype.h>
 
 #define ERR_EXIT(m) \
         do { \
