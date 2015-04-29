@@ -22,9 +22,14 @@ void str_split(const char *str, char *left, char *right, char c)
         ptr++;
      } 
     *left = '\0';
-
+    
+    if (ptr == '\0') {
+        *right = '\0';
+        return;
+    }
     strcpy(right, ptr + 1);
-} 
+    return;
+}
 
 int str_all_space(const char *str)
 {

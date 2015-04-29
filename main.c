@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
           
         connfd = accept_time_out(listenfd, NULL, accept_timeout);
         if (connfd == -1) {
-            printf("don't has connection in %d seconds\n", accept_timeout);
+        //    printf("don't has connection in %d seconds\n", accept_timeout);
             continue;
         }
         printf("connect success\n");

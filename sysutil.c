@@ -303,8 +303,8 @@ size_t readline(int fd, char *buf, int maxline)
         for (i = 0; i < ret; i++) {
             if (pbuf[i] == '\n') {
                 readn(fd, pbuf, i + 1);
-                nleft -= ret;
-                break;
+                nleft -= i+1;
+                return maxline - nleft;
             }
         }
 

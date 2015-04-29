@@ -1,11 +1,12 @@
 #ifndef SESSION_H
 #define SESSION_H
 
+#define MAX_COMMAND 1024
 typedef struct {
     
-    char    command[1024];
-    char    comm[1024];         //FTP命令
-    char    args[1024];         //命令的参数
+    char    command[MAX_COMMAND];
+    char    comm[MAX_COMMAND];         //FTP命令
+    char    args[MAX_COMMAND];         //命令的参数
 
     int     peerfd;     //和客户端连接的套接字
 
