@@ -2,11 +2,14 @@
 #include "common.h"
 #include "sysutil.h"
 #include "strutil.h"
+#include "ftp_codes.h"
+
+void ftp_reply(session_t *sess, int status, const char *context);
+
 void handle_proto(session_t *sess)
 {
     //向客户端发送初始化信息
-    writen(sess->peerfd, "220 (miniftp 0.1)\r\n", strlen("220 (miniftp 0.1)\r\n"));
-    
+    ftp_reply(sess, FTP_GREET, "mini ftpserver0.1"); 
     while (1) {
         //读客户端发来的命令，并解析
         int ret = readline(sess->peerfd, sess->command, MAX_COMMAND);
@@ -20,4 +23,12 @@ void handle_proto(session_t *sess)
         str_split(sess->command, sess->comm, sess->args, ' ');
         printf("COMMD=[%s], ARGS=[%s]\n", sess->comm, sess->args);
     }  
+}
+
+void ftp_reply(session_t *sess, int status, const char *context)
+{
+    char buf[1024];
+    memset(buf, 0, sizeof(buf));
+    snprintf(buf, sizeof(buf), "%d %s\r\n", status, context);
+    writen(sess->peerfd, buf, strlen(buf));
 }
