@@ -26,11 +26,11 @@ void session_begin(session_t *sess)
     pid = fork();
     if (pid == -1) {
         ERR_EXIT("fork error");
-    } else if (pid == 0) {  //nobody进程
+    } else if (pid != 0) {  //nobody进程 父进程
         close(fd[0]);
         sess->nobody_fd = fd[1];
         handle_nobody(sess);
-    } else {                //proto进程
+    } else {                //proto进程  子进程
         close(fd[1]);
         sess->proto_fd = fd[0];
         handle_proto(sess);

@@ -33,13 +33,14 @@ int main(int argc, char *argv[])
         }
         printf("connect success\n");
         session_init(&sess);
-        sess.peerfd = connfd;
         pid = fork();
         if (pid == -1) {
             ERR_EXIT("fork error");
         } else if (pid == 0) {   //子进程
             close(listenfd); 
+            sess.peerfd = connfd;
             session_begin(&sess);   //建立一个会话
+            exit(EXIT_SUCCESS);     //此时是nobody 进程
         } else {                //父进程
             close(connfd);
         }
