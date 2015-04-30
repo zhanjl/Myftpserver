@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+//#define _XOPEN_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +15,9 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <ctype.h>
+#include <shadow.h>
 
+char *crypt(const char *key, const char *salt);
 #define ERR_EXIT(m) \
         do { \
         perror(m);\

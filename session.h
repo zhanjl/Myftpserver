@@ -1,6 +1,7 @@
 #ifndef SESSION_H
 #define SESSION_H
 
+#include "common.h"
 #define MAX_COMMAND 1024
 typedef struct {
     
@@ -12,6 +13,8 @@ typedef struct {
 
     int     nobody_fd;  //nobody进程使用的fd
     int     proto_fd;   //proto进程使用的fd
+
+    uid_t   user_uid;   //登陆的用户ID
 } session_t;
 
 //初始化session
