@@ -3,6 +3,7 @@
 #include "sysutil.h"
 #include "strutil.h"
 #include "ftp_codes.h"
+#include "command_map.h"
 
 void handle_proto(session_t *sess)
 {

@@ -15,6 +15,8 @@ typedef struct {
     int     proto_fd;   //proto进程使用的fd
 
     uid_t   user_uid;   //登陆的用户ID
+
+    int     ascii_mode; //文件类型
 } session_t;
 
 //初始化session
