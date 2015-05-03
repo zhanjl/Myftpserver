@@ -2,6 +2,7 @@
 #include "common.h"
 #include "ftp_codes.h"
 #include "sysutil.h"
+#include "configure.h"
 
 typedef struct ftpcmd
 {
@@ -99,6 +100,11 @@ void do_pass(session_t *sess)
     if (seteuid(pwd->pw_uid) == -1)
         ERR_EXIT("setegid");
 
+    //把当前工作目录改为home目录
+    if (chdir(pwd->pw_dir) == -1)
+        ERR_EXIT("chdir");
+
+    umask(local_umask);
     ftp_reply(sess, FTP_LOGINOK, "Login successful.");
 }
 
