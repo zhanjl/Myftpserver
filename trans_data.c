@@ -157,15 +157,15 @@ const char *statbuf_get_size(struct stat *sbuf)
     return buf;
 }
 
-int is_port_active(session_t *sess)
+static int is_port_active(session_t *sess)
 {
     return sess->p_addr != NULL;
 }
 
 //被动模式，现在还没设计这个功能
-int is_pasv_active(session_t *sess)
+static int is_pasv_active(session_t *sess)
 {
-    return 0;
+    return sess->listenfd == -1;
 }
 
 int get_trans_data_fd(session_t *sess)
@@ -178,6 +178,10 @@ int get_trans_data_fd(session_t *sess)
         return -1;
     }
     
+    if (is_port && is_pasv) {
+        fprintf(stderr, "Both port and pasv are active\n");
+        exit(EXIT_FAILURE);
+    }
     //主动模式
     if (is_port) {
         int data_fd;
@@ -192,6 +196,14 @@ int get_trans_data_fd(session_t *sess)
 
         free(sess->p_addr);
         sess->p_addr = NULL;
+    } else if (is_pasv) {
+        int  acceptfd = accept_time_out(sess->listenfd, NULL, accept_timeout);
+        if (acceptfd == -1)
+            ERR_EXIT("accept_time_out");
+        sess->sockfd = acceptfd;
+
+        close(sess->listenfd);
+        sess->listenfd = -1;
     }
 
     return 0;
