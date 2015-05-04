@@ -4,6 +4,7 @@
 #include "sysutil.h"
 #include "configure.h"
 #include "trans_data.h"
+
 typedef struct ftpcmd
 {
     const char *cmd;
@@ -183,18 +184,13 @@ void do_port(session_t *sess)
 void do_list(session_t *sess)
 {
 
-    int sockfd;
-    if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) < 0) 
-        ERR_EXIT("socket");
-
-    //连接超时
-    if (connect_time_out(sockfd, sess->p_addr, connect_timeout) == -1)
+    if (get_trans_data_fd(sess) == -1)  //建立连接失败
         return;
-    
-    sess->sockfd = sockfd;
+
     ftp_reply(sess, FTP_DATACONN, "Here comes the directory list.");
-    trans_lists(sess);      //send dir list
-    close(sockfd);
+
+    trans_lists(sess);      //发送数据
+    close(sess->sockfd);
     sess->sockfd = -1;
 
     ftp_reply(sess, FTP_TRANSFEROK, "Directory send OK.");

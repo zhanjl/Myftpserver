@@ -18,7 +18,7 @@ typedef struct {
 
     int     ascii_mode; //文件类型
     struct sockaddr_in *p_addr; //客户端发来的地址
-    int     sockfd;     //connected fd
+    int     sockfd;     //数据传输fd
 } session_t;
 
 //初始化session

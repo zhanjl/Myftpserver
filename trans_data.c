@@ -1,6 +1,9 @@
 #include "trans_data.h"
 #include "common.h"
 #include "sysutil.h"
+#include "ftp_codes.h"
+#include "configure.h"
+#include "command_map.h"
 const char *statbuf_get_perms(struct stat *sbuf);
 const char *statbuf_get_date(struct stat *sbuf);
 const char *statbuf_get_filename(struct stat *sbuf, const char* name);
@@ -154,3 +157,42 @@ const char *statbuf_get_size(struct stat *sbuf)
     return buf;
 }
 
+int is_port_active(session_t *sess)
+{
+    return sess->p_addr != NULL;
+}
+
+//被动模式，现在还没设计这个功能
+int is_pasv_active(session_t *sess)
+{
+    return 0;
+}
+
+int get_trans_data_fd(session_t *sess)
+{
+    int is_port = is_port_active(sess);
+    int is_pasv = is_pasv_active(sess);
+
+    if (!is_port && !is_pasv) {
+        ftp_reply(sess, FTP_BADSENDCONN, "Use PORT or PASV first.");
+        return -1;
+    }
+    
+    //主动模式
+    if (is_port) {
+        int data_fd;
+        if ((data_fd = socket(PF_INET, SOCK_STREAM, 0)) < 0) 
+            ERR_EXIT("socket");
+        int ret;
+        ret = connect_time_out(data_fd, sess->p_addr, connect_timeout);
+        if (ret == -1)  //连接超时
+            ERR_EXIT("connect_time_out");
+
+        sess->sockfd = data_fd;
+
+        free(sess->p_addr);
+        sess->p_addr = NULL;
+    }
+
+    return 0;
+}
