@@ -17,6 +17,8 @@ typedef struct {
     uid_t   user_uid;   //登陆的用户ID
 
     int     ascii_mode; //文件类型
+    struct sockaddr_in *p_addr; //客户端发来的地址
+    int     sockfd;     //connected fd
 } session_t;
 
 //初始化session

@@ -1,27 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <dirent.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <time.h>
-
-#define ERR_EXIT(m) \
-     do { \
-        perror(m);\
-        exit(EXIT_FAILURE);\
-    } while(0)
-
-
+#include "trans_data.h"
+#include "common.h"
+#include "sysutil.h"
 const char *statbuf_get_perms(struct stat *sbuf);
 const char *statbuf_get_date(struct stat *sbuf);
 const char *statbuf_get_filename(struct stat *sbuf, const char* name);
 const char *statbuf_get_user_info(struct stat *sbuf);
 const char *statbuf_get_size(struct stat *sbuf);
 
-int main()
+void trans_lists(session_t *sess)
 {
     DIR *dir = opendir(".");    //打开当前目录文件
     if (dir == NULL)
@@ -49,11 +35,11 @@ int main()
         strcat(buf, statbuf_get_size(&sbuf));
         strcat(buf, " ");
         strcat(buf, statbuf_get_filename(&sbuf, filename));
+        strcat(buf, "\r\n");
 
-        printf("%s\n", buf);
+        writen(sess->sockfd, buf, strlen(buf));
     }
     closedir(dir);
-    return 0;
 }
 
 const char *statbuf_get_perms(struct stat *sbuf)

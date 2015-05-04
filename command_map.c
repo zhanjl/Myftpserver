@@ -3,7 +3,7 @@
 #include "ftp_codes.h"
 #include "sysutil.h"
 #include "configure.h"
-
+#include "trans_data.h"
 typedef struct ftpcmd
 {
     const char *cmd;
@@ -18,6 +18,8 @@ static ftpcmd_t ctr_cmds[] = {
     { "PWD", do_pwd },
     { "FEAT", do_feat },
     { "SYST", do_syst },
+    { "PORT", do_port },
+    { "LIST", do_list },
     { NULL, NULL },
 };
 
@@ -154,4 +156,46 @@ void do_feat(session_t *sess)
 void do_syst(session_t *sess)
 {
     ftp_reply(sess, FTP_SYSTOK, "UNIX Type: L8");
+}
+
+void do_port(session_t *sess)
+{
+    sess->p_addr = (struct sockaddr_in*)malloc(sizeof(struct sockaddr_in)); 
+    unsigned int p[6];
+    sscanf(sess->args, "%u,%u,%u,%u,%u,%u", &p[0], &p[1], &p[2], &p[3], &p[4], &p[5]);
+     
+    memset(sess->p_addr, 0, sizeof(struct sockaddr_in));
+    sess->p_addr->sin_family = AF_INET;
+    //sockaddr_in中的数据都是以大端序存放
+    char *str = &(sess->p_addr->sin_port);
+    str[0] = p[4];
+    str[1] = p[5];
+
+    str = &(sess->p_addr->sin_port);
+    str[0] = p[0];
+    str[1] = p[1];
+    str[2] = p[2];
+    str[3] = p[3];
+
+    ftp_reply(sess, FTP_PORTOK, "PORT command successful. Consider using PASV.");
+}
+
+void do_list(session_t *sess)
+{
+
+    int sockfd;
+    if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) < 0) 
+        ERR_EXIT("socket");
+
+    //连接超时
+    if (connect_time_out(sockfd, sess->p_addr, connect_timeout) == -1)
+        return;
+    
+    sess->sockfd = sockfd;
+    ftp_reply(sess, FTP_DATACONN, "Here comes the directory list.");
+    trans_lists(sess);      //send dir list
+    close(sockfd);
+    sess->sockfd = -1;
+
+    ftp_reply(sess, FTP_TRANSFEROK, "Directory send OK.");
 }

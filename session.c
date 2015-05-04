@@ -14,6 +14,8 @@ void session_init(session_t *sess)
     sess->proto_fd = -1;
     sess->user_uid = 0;
     sess->ascii_mode = 0;
+    sess->p_addr = NULL;
+    sess->sockfd = -1;
 }
 
 //主进程的子进程会调用这个函数
