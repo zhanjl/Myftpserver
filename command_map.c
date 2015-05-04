@@ -21,6 +21,7 @@ static ftpcmd_t ctr_cmds[] = {
     { "SYST", do_syst },
     { "PORT", do_port },
     { "LIST", do_list },
+    { "PASV", do_pasv },
     { NULL, NULL },
 };
 
@@ -194,4 +195,31 @@ void do_list(session_t *sess)
     sess->sockfd = -1;
 
     ftp_reply(sess, FTP_TRANSFEROK, "Directory send OK.");
+}
+
+void do_pasv(session_t *sess)
+{
+    char ip[16];
+    if (getlocalip(ip) == -1)
+        ERR_EXIT("getlocalip");
+    
+    int listenfd;
+    listenfd = tcp_server(ip, 0);   //建立监听套接字
+    sess->listenfd = listenfd;
+
+    struct sockaddr_in  addr;
+    socklen_t len = sizeof (addr);
+    if (getsockname(listenfd, (struct sockaddr*)&addr, &len) == -1)
+        ERR_EXIT("getsockname");
+
+    unsigned int v[6];
+    sscanf(ip, "%u.%u.%u.%u", &v[0], &v[1], &v[2], &v[3]);
+
+    unsigned char *p = (unsigned char*)&addr.sin_port;
+    v[4] = p[0];
+    v[5] = p[1];
+
+    char text[1024] = {0};
+    snprintf(text, sizeof(text), "Enterint Passive Mode.(%u,%u,%u,%u,%u,%u)", v[0],v[1],v[2],v[3],v[4],v[5]);
+    ftp_reply(sess, FTP_PASVOK, text);
 }

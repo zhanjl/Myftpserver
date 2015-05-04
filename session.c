@@ -16,6 +16,7 @@ void session_init(session_t *sess)
     sess->ascii_mode = 0;
     sess->p_addr = NULL;
     sess->sockfd = -1;
+    sess->listenfd = -1;
 }
 
 //主进程的子进程会调用这个函数
