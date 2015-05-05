@@ -36,5 +36,6 @@ size_t readline(int fd, char *buf, int maxline);
 
 
 //接受和发送套接字描述符
-
+void send_fd(int sock_fd, int fd);
+int recv_fd(int sock_fd);
 #endif  /*SYS_UTIL_H*/

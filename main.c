@@ -4,7 +4,7 @@
 #include "configure.h"
 #define     LISTENPORT      9981
 
-void printconfig(); //测试解析配置文件函数
+//void printconfig(); //测试解析配置文件函数
 int main(int argc, char *argv[])
 {
 
@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
     parse_load_file("ftpserver.conf");
     printf("parse_load_file success\n");
-    printconfig();
+//    printconfig();
 
     int listenfd; 
     listenfd = tcp_server(listen_address, listen_port);
@@ -47,13 +47,13 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-void printconfig()
-{
-    printf("pasv_enable = %d\n", pasv_enable);
-    printf("listen_port = %d\n", listen_port);
-    printf("accept_timeout = %d\n", accept_timeout);
-
-    printf("local_umask = %d\n", local_umask);
-    printf("max_clients = %d\n", max_clients);
-    printf("listen_address = %s\n", listen_address);
-}
+//void printconfig()
+//{
+//    printf("pasv_enable = %d\n", pasv_enable);
+//    printf("listen_port = %d\n", listen_port);
+//    printf("accept_timeout = %d\n", accept_timeout);
+//
+//    printf("local_umask = %d\n", local_umask);
+//    printf("max_clients = %d\n", max_clients);
+//    printf("listen_address = %s\n", listen_address);
+//}
