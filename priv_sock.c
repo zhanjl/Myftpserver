@@ -47,7 +47,16 @@ void priv_sock_send_cmd(int fd, char cmd)
 char priv_sock_recv_cmd(int fd)
 {
     char res;
-    if (readn(fd, &res, sizeof(res)) != sizeof(res)) {
+    int  ret;
+
+    ret = readn(fd, &res, sizeof(res));
+
+    if (ret == 0) {
+        printf("Proto close!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (ret != sizeof(res)) {
         fprintf(stderr, "priv_sock_recv_cmd error");
         exit(EXIT_FAILURE);
     }

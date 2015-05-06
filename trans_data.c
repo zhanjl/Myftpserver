@@ -4,6 +4,7 @@
 #include "ftp_codes.h"
 #include "configure.h"
 #include "command_map.h"
+#include "priv_sock.h"
 const char *statbuf_get_perms(struct stat *sbuf);
 const char *statbuf_get_date(struct stat *sbuf);
 const char *statbuf_get_filename(struct stat *sbuf, const char* name);
@@ -184,16 +185,21 @@ int get_trans_data_fd(session_t *sess)
     }
     //主动模式
     if (is_port) {
-        int data_fd;
-        if ((data_fd = socket(PF_INET, SOCK_STREAM, 0)) < 0) 
-            ERR_EXIT("socket");
-        int ret;
-        ret = connect_time_out(data_fd, sess->p_addr, connect_timeout);
-        if (ret == -1)  //连接超时
-            ERR_EXIT("connect_time_out");
+        //向nobody进程发送命令
+        priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_GET_DATA_SOCK); 
+        //发送客户端监听套接字的地址，由nobody进程负责建立连接
+        char *ip = inet_ntoa(sess->p_addr->sin_addr);
+        uint16_t port = ntohs(sess->p_addr->sin_port);
+        priv_sock_send_str(sess->proto_fd, ip, strlen(ip));
+        priv_sock_send_int(sess->proto_fd, port);
 
-        sess->sockfd = data_fd;
-
+        //接受nobody进程的应答
+        char result = priv_sock_recv_result(sess->proto_fd);
+        if (result == PRIV_SOCK_RESULT_BAD) {
+            fprintf(stderr, "get data fd error\n");
+            exit(EXIT_FAILURE);
+        }
+        sess->sockfd = priv_sock_recv_fd(sess->proto_fd);
         free(sess->p_addr);
         sess->p_addr = NULL;
     } else if (is_pasv) {

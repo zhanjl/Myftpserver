@@ -20,6 +20,7 @@
 #include <crypt.h>
 #include <dirent.h>
 #include <time.h>
+#include <signal.h>
 #define ERR_EXIT(m) \
         do { \
         perror(m);\

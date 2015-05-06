@@ -13,6 +13,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE); 
     }
 
+    if (signal(SIGCHLD, SIG_IGN) == SIG_ERR)
+        ERR_EXIT("signal");
     parse_load_file("ftpserver.conf");
     printf("parse_load_file success\n");
 //    printconfig();

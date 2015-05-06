@@ -17,7 +17,7 @@ void handle_nobody(session_t *sess)
         switch (cmd)    //设置不同的命令处理函数
         {
             case PRIV_SOCK_GET_DATA_SOCK:
-
+                privop_pasv_get_data_sock(sess);
                 break;
             case PRIV_SOCK_PASV_ACTIVE:
 
