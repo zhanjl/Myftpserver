@@ -166,7 +166,8 @@ static int is_port_active(session_t *sess)
 //被动模式，现在还没设计这个功能
 static int is_pasv_active(session_t *sess)
 {
-    return sess->listenfd == -1;
+    priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_ACTIVE);
+    return priv_sock_recv_int(sess->proto_fd); 
 }
 
 int get_trans_data_fd(session_t *sess)
@@ -203,13 +204,15 @@ int get_trans_data_fd(session_t *sess)
         free(sess->p_addr);
         sess->p_addr = NULL;
     } else if (is_pasv) {
-        int  acceptfd = accept_time_out(sess->listenfd, NULL, accept_timeout);
-        if (acceptfd == -1)
-            ERR_EXIT("accept_time_out");
-        sess->sockfd = acceptfd;
+        priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_ACCEPT);
+        
+        char res = priv_sock_recv_result(sess->proto_fd);
+        if (res == PRIV_SOCK_RESULT_BAD) {
+            fprintf(stderr, "get data fd error\n");
+            exit(EXIT_FAILURE);
+        }
 
-        close(sess->listenfd);
-        sess->listenfd = -1;
+        sess->sockfd = priv_sock_recv_fd(sess->proto_fd);
     }
 
     return 0;

@@ -3,6 +3,7 @@
 #include "sysutil.h"
 #include "configure.h"
 #include "common.h"
+
 void privop_pasv_get_data_sock(session_t *sess)
 {
     char ip[16] = {0};
@@ -28,7 +29,7 @@ void privop_pasv_get_data_sock(session_t *sess)
 
 void privop_pasv_active(session_t *sess)
 {
-
+    priv_sock_send_int(sess->nobody_fd, sess->listenfd != -1); 
 }
 
 void privop_pasv_listen(session_t *sess)
@@ -53,5 +54,15 @@ void privop_pasv_listen(session_t *sess)
 
 void privop_pasv_accept(session_t *sess)
 {
+    int peerfd = accept_time_out(sess->listenfd, NULL, accept_timeout);
+    close(sess->listenfd);
+    sess->listenfd = -1;
+    if (peerfd == -1) {
+        priv_sock_send_result(sess->nobody_fd, PRIV_SOCK_RESULT_BAD);
+        exit(EXIT_FAILURE);
+    }
 
+    priv_sock_send_result(sess->nobody_fd, PRIV_SOCK_RESULT_OK);
+    priv_sock_send_fd(sess->nobody_fd, peerfd);
+    close(peerfd);
 }

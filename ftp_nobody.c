@@ -21,13 +21,13 @@ void handle_nobody(session_t *sess)
                 privop_pasv_get_data_sock(sess);   
                 break;
             case PRIV_SOCK_PASV_ACTIVE:
-
+                privop_pasv_active(sess);
                 break;
             case PRIV_SOCK_PASV_LISTEN:
                 privop_pasv_listen(sess);   //在nobody进程中建立监听套接字
                 break;
             case PRIV_SOCK_PASV_ACCEPT:
-
+                privop_pasv_accept(sess);
                 break;
             default:
                 fprintf(stderr, "Unkown command\n");
