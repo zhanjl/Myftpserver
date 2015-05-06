@@ -4,6 +4,7 @@
 #include "sysutil.h"
 #include "configure.h"
 #include "trans_data.h"
+#include "priv_sock.h"
 
 typedef struct ftpcmd
 {
@@ -203,19 +204,28 @@ void do_pasv(session_t *sess)
     if (getlocalip(ip) == -1)
         ERR_EXIT("getlocalip");
     
-    int listenfd;
-    listenfd = tcp_server(ip, 0);   //建立监听套接字
-    sess->listenfd = listenfd;
+    //给nobody进程发送命令
+    priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_LISTEN);
+    char res = priv_sock_recv_result(sess->proto_fd);
 
-    struct sockaddr_in  addr;
-    socklen_t len = sizeof (addr);
-    if (getsockname(listenfd, (struct sockaddr*)&addr, &len) == -1)
-        ERR_EXIT("getsockname");
+    if (res == PRIV_SOCK_RESULT_BAD) {
+        ftp_reply(sess, FTP_BADCMD, "get listenfd error");
+        return;
+    }
+    uint16_t port = priv_sock_recv_int(sess->proto_fd);
+    //int listenfd;
+    //listenfd = tcp_server(ip, 0);   //建立监听套接字
+    //sess->listenfd = listenfd;
+
+    //struct sockaddr_in  addr;
+    //socklen_t len = sizeof (addr);
+    //if (getsockname(listenfd, (struct sockaddr*)&addr, &len) == -1)
+    //    ERR_EXIT("getsockname");
 
     unsigned int v[6];
     sscanf(ip, "%u.%u.%u.%u", &v[0], &v[1], &v[2], &v[3]);
-
-    unsigned char *p = (unsigned char*)&addr.sin_port;
+    uint16_t net_port = htons(port);
+    unsigned char *p = (unsigned char*)&net_port;
     v[4] = p[0];
     v[5] = p[1];
 

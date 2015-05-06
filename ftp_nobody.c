@@ -16,14 +16,15 @@ void handle_nobody(session_t *sess)
         cmd = priv_sock_recv_cmd(sess->nobody_fd);
         switch (cmd)    //设置不同的命令处理函数
         {
-            case PRIV_SOCK_GET_DATA_SOCK:
-                privop_pasv_get_data_sock(sess);
+            case PRIV_SOCK_GET_DATA_SOCK: 
+                //主动连接客户端，并把连接套接字发送给proto进程
+                privop_pasv_get_data_sock(sess);   
                 break;
             case PRIV_SOCK_PASV_ACTIVE:
 
                 break;
             case PRIV_SOCK_PASV_LISTEN:
-
+                privop_pasv_listen(sess);   //在nobody进程中建立监听套接字
                 break;
             case PRIV_SOCK_PASV_ACCEPT:
 
