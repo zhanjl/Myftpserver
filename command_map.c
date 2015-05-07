@@ -24,6 +24,8 @@ static ftpcmd_t ctr_cmds[] = {
     { "LIST", do_list },
     { "PASV", do_pasv },
     { "NLST", do_nlst },
+    { "NOOP", do_noop },
+    { "QUIT", do_quit },
     { NULL, NULL },
 };
 
@@ -249,4 +251,15 @@ void do_pasv(session_t *sess)
     char text[1024] = {0};
     snprintf(text, sizeof(text), "Enterint Passive Mode.(%u,%u,%u,%u,%u,%u)", v[0],v[1],v[2],v[3],v[4],v[5]);
     ftp_reply(sess, FTP_PASVOK, text);
+}
+
+void do_noop(session_t *sess)
+{
+    ftp_reply(sess, FTP_GREET, "mini ftpserver 0.1");
+}
+
+void do_quit(session_t *sess)
+{
+    ftp_reply(sess, FTP_GOODBYE, "Good Bye!");
+    exit(EXIT_SUCCESS);
 }
