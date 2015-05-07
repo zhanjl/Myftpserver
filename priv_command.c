@@ -39,7 +39,7 @@ void privop_pasv_listen(session_t *sess)
         ERR_EXIT("getlocalip");
 
     int listenfd;
-    listenfd = tcp_server(ip, 0);   //建立监听套接字
+    listenfd = tcp_server(ip, 0);   //建立监听套接字 一般要设为20，这点要注意
     sess->listenfd = listenfd;
     struct sockaddr_in  addr;
     socklen_t len = sizeof (addr);

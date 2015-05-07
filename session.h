@@ -25,6 +25,9 @@ typedef struct {
 //初始化session
 void session_init(session_t *sess);
 
+//将三个字符数组清0
+void session_reset_command(session_t *sess);
+
 //开始一个会话
 void session_begin(session_t *sess);
 #endif  //SESSION_H

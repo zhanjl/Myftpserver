@@ -10,6 +10,8 @@ void handle_proto(session_t *sess)
     //向客户端发送初始化信息
     ftp_reply(sess, FTP_GREET, "mini ftpserver0.1"); 
     while (1) {
+        //清空命令数组
+        session_reset_command(sess);
         //读客户端发来的命令，并解析
         int ret = readline(sess->peerfd, sess->command, MAX_COMMAND);
         if (ret == 0) {

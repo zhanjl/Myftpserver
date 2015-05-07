@@ -163,13 +163,16 @@ static int is_port_active(session_t *sess)
     return sess->p_addr != NULL;
 }
 
-//被动模式，现在还没设计这个功能
+//被动模式
 static int is_pasv_active(session_t *sess)
 {
     priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_ACTIVE);
     return priv_sock_recv_int(sess->proto_fd); 
 }
 
+static void get_port_data_fd(session_t *sess);
+static void get_pasv_data_fd(session_t *sess);
+//建立连接
 int get_trans_data_fd(session_t *sess)
 {
     int is_port = is_port_active(sess);
@@ -186,34 +189,46 @@ int get_trans_data_fd(session_t *sess)
     }
     //主动模式
     if (is_port) {
-        //向nobody进程发送命令
-        priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_GET_DATA_SOCK); 
-        //发送客户端监听套接字的地址，由nobody进程负责建立连接
-        char *ip = inet_ntoa(sess->p_addr->sin_addr);
-        uint16_t port = ntohs(sess->p_addr->sin_port);
-        priv_sock_send_str(sess->proto_fd, ip, strlen(ip));
-        priv_sock_send_int(sess->proto_fd, port);
-
-        //接受nobody进程的应答
-        char result = priv_sock_recv_result(sess->proto_fd);
-        if (result == PRIV_SOCK_RESULT_BAD) {
-            fprintf(stderr, "get data fd error\n");
-            exit(EXIT_FAILURE);
-        }
-        sess->sockfd = priv_sock_recv_fd(sess->proto_fd);
-        free(sess->p_addr);
-        sess->p_addr = NULL;
-    } else if (is_pasv) {
-        priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_ACCEPT);
-        
-        char res = priv_sock_recv_result(sess->proto_fd);
-        if (res == PRIV_SOCK_RESULT_BAD) {
-            fprintf(stderr, "get data fd error\n");
-            exit(EXIT_FAILURE);
-        }
-
-        sess->sockfd = priv_sock_recv_fd(sess->proto_fd);
+        get_port_data_fd(sess);
+    } else if (is_pasv) {   //被动模式
+        get_pasv_data_fd(sess);
     }
 
     return 0;
+}
+
+static void get_port_data_fd(session_t *sess)
+{
+    //向nobody进程发送命令
+    priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_GET_DATA_SOCK); 
+    //发送客户端监听套接字的地址，由nobody进程负责建立连接
+    char *ip = inet_ntoa(sess->p_addr->sin_addr);
+    uint16_t port = ntohs(sess->p_addr->sin_port);
+    priv_sock_send_str(sess->proto_fd, ip, strlen(ip));
+    priv_sock_send_int(sess->proto_fd, port);
+
+    //接受nobody进程的应答
+    char result = priv_sock_recv_result(sess->proto_fd);
+    if (result == PRIV_SOCK_RESULT_BAD) {
+        fprintf(stderr, "get data fd error\n");
+        exit(EXIT_FAILURE);
+    }
+    sess->sockfd = priv_sock_recv_fd(sess->proto_fd);
+    free(sess->p_addr);
+    sess->p_addr = NULL;
+
+}
+
+static void get_pasv_data_fd(session_t *sess)
+{
+
+    priv_sock_send_cmd(sess->proto_fd, PRIV_SOCK_PASV_ACCEPT);
+    
+    char res = priv_sock_recv_result(sess->proto_fd);
+    if (res == PRIV_SOCK_RESULT_BAD) {
+        fprintf(stderr, "get data fd error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    sess->sockfd = priv_sock_recv_fd(sess->proto_fd);
 }

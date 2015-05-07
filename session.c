@@ -20,6 +20,13 @@ void session_init(session_t *sess)
     sess->listenfd = -1;
 }
 
+void session_reset_command(session_t *sess)
+{
+    memset(sess->command, 0, sizeof(sess->command)); 
+    memset(sess->comm, 0, sizeof(sess->comm)); 
+    memset(sess->args, 0, sizeof(sess->args)); 
+}
+
 //主进程的子进程会调用这个函数
 void session_begin(session_t *sess)
 {
