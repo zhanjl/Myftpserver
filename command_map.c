@@ -23,6 +23,7 @@ static ftpcmd_t ctr_cmds[] = {
     { "PORT", do_port },
     { "LIST", do_list },
     { "PASV", do_pasv },
+    { "NLST", do_nlst },
     { NULL, NULL },
 };
 
@@ -191,11 +192,27 @@ void do_list(session_t *sess)
 
     ftp_reply(sess, FTP_DATACONN, "Here comes the directory list.");
 
-    trans_lists(sess);      //发送数据
+    trans_lists(sess, 1);      //发送数据
     close(sess->sockfd);
     sess->sockfd = -1;
 
     ftp_reply(sess, FTP_TRANSFEROK, "Directory send OK.");
+}
+
+//只发送名字
+void do_nlst(session_t *sess)
+{
+    if (get_trans_data_fd(sess) == -1)  //建立连接失败
+        return;
+
+    ftp_reply(sess, FTP_DATACONN, "Here comes the directory list.");
+
+    trans_lists(sess, 0);      //发送数据
+    close(sess->sockfd);
+    sess->sockfd = -1;
+
+    ftp_reply(sess, FTP_TRANSFEROK, "Directory send OK.");
+
 }
 
 void do_pasv(session_t *sess)

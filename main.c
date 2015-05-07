@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
             close(listenfd); 
             sess.peerfd = connfd;
             session_begin(&sess);   //建立一个会话
-            exit(EXIT_SUCCESS);     //此时是nobody 进程
+            exit(EXIT_SUCCESS);
         } else {                //父进程
             close(connfd);
         }

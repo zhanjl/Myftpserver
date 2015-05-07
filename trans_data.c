@@ -11,7 +11,7 @@ const char *statbuf_get_filename(struct stat *sbuf, const char* name);
 const char *statbuf_get_user_info(struct stat *sbuf);
 const char *statbuf_get_size(struct stat *sbuf);
 
-void trans_lists(session_t *sess)
+void trans_lists(session_t *sess, int level)
 {
     DIR *dir = opendir(".");    //打开当前目录文件
     if (dir == NULL)
@@ -29,15 +29,16 @@ void trans_lists(session_t *sess)
         if (lstat(filename, &sbuf) == -1) {
             ERR_EXIT("lstat");
         }
-
-        strcpy(buf, statbuf_get_perms(&sbuf));
-        strcat(buf, " ");
-        strcat(buf, statbuf_get_user_info(&sbuf));
-        strcat(buf, " ");
-        strcat(buf, statbuf_get_date(&sbuf));
-        strcat(buf, " ");
-        strcat(buf, statbuf_get_size(&sbuf));
-        strcat(buf, " ");
+        if (level == 1) {
+            strcpy(buf, statbuf_get_perms(&sbuf));
+            strcat(buf, " ");
+            strcat(buf, statbuf_get_user_info(&sbuf));
+            strcat(buf, " ");
+            strcat(buf, statbuf_get_date(&sbuf));
+            strcat(buf, " ");
+            strcat(buf, statbuf_get_size(&sbuf));
+            strcat(buf, " ");
+        }
         strcat(buf, statbuf_get_filename(&sbuf, filename));
         strcat(buf, "\r\n");
 
