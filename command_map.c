@@ -26,6 +26,8 @@ static ftpcmd_t ctr_cmds[] = {
     { "NLST", do_nlst },
     { "NOOP", do_noop },
     { "QUIT", do_quit },
+    { "CWD", do_cwd },
+    { "CDUP", do_cdup },
     { NULL, NULL },
 };
 
@@ -262,4 +264,22 @@ void do_quit(session_t *sess)
 {
     ftp_reply(sess, FTP_GOODBYE, "Good Bye!");
     exit(EXIT_SUCCESS);
+}
+
+void do_cwd(session_t *sess)
+{
+    if (chdir(sess->args) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Fail to change directory");
+        return;
+    }
+    ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
+}
+
+void do_cdup(session_t *sess)
+{
+    if (chdir("..") == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Fail to change directory");
+        return;
+    }
+    ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
 }

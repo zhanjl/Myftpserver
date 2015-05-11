@@ -4,7 +4,6 @@
 #include "configure.h"
 #define     LISTENPORT      9981
 
-//void printconfig(); //测试解析配置文件函数
 int main(int argc, char *argv[])
 {
 
@@ -49,13 +48,3 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-//void printconfig()
-//{
-//    printf("pasv_enable = %d\n", pasv_enable);
-//    printf("listen_port = %d\n", listen_port);
-//    printf("accept_timeout = %d\n", accept_timeout);
-//
-//    printf("local_umask = %d\n", local_umask);
-//    printf("max_clients = %d\n", max_clients);
-//    printf("listen_address = %s\n", listen_address);
-//}
