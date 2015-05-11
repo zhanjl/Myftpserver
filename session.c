@@ -19,6 +19,7 @@ void session_init(session_t *sess)
     sess->sockfd = -1;
     sess->listenfd = -1;
     sess->restartpos = 0;
+    sess->rnfr_name = NULL;
 }
 
 void session_reset_command(session_t *sess)

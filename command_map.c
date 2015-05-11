@@ -33,6 +33,8 @@ static ftpcmd_t ctr_cmds[] = {
     { "DELE", do_dele },
     { "RMD", do_rmd },
     { "SIZE", do_size },
+    { "RNFR", do_rnfr },
+    { "RNTO", do_rnto },
     { NULL, NULL },
 };
 
@@ -356,4 +358,32 @@ void do_size(session_t *sess)
     char text[1024] = {0};
     snprintf(text, sizeof(text), "%lu", sbuf.st_size);
     ftp_reply(sess, FTP_SIZEOK, text);
+}
+
+void do_rnfr(session_t *sess)
+{
+    if (sess->rnfr_name) {
+        free(sess->rnfr_name);
+        sess->rnfr_name = NULL;
+    }
+
+    sess->rnfr_name = (char*)malloc(strlen(sess->args) + 1);
+    strcpy(sess->rnfr_name, sess->args);
+    ftp_reply(sess, FTP_RNFROK, "Ready for RNTO.");
+}
+
+void do_rnto(session_t *sess)
+{
+    if (sess->rnfr_name == NULL) {
+        ftp_reply(sess, FTP_NEEDRNFR, "RNFD required first.");
+        return;
+    }
+    if (rename(sess->rnfr_name, sess->args) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Rename failed.");
+        return;
+    }
+    free(sess->rnfr_name);
+    sess->rnfr_name = NULL;
+
+    ftp_reply(sess, FTP_RENAMEOK, "Rename successful");
 }
