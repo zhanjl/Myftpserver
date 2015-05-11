@@ -30,6 +30,8 @@ static ftpcmd_t ctr_cmds[] = {
     { "CDUP", do_cdup },
     { "REST", do_rest },
     { "MKD", do_mkd },
+    { "DELE", do_dele },
+    { "RMD", do_rmd },
     { NULL, NULL },
 };
 
@@ -313,4 +315,25 @@ void do_mkd(session_t *sess)
         snprintf(text, sizeof(text), "%s/%s created.", tmp, sess->args);
     }
     ftp_reply(sess, FTP_MKDIROK, text);
+}
+
+void do_dele(session_t *sess)
+{
+    if (unlink(sess->args) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Delete operation failed.");
+        return;
+    }
+
+    ftp_reply(sess, FTP_DELEOK, "Delete operation success.");
+}
+
+void do_rmd(session_t *sess)
+{
+    if (rmdir(sess->args) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Remove directory operation failed.");
+        return;
+    }
+
+    ftp_reply(sess, FTP_RMDIROK, "Remove directory operation success.");
+
 }
