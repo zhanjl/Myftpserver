@@ -32,6 +32,7 @@ static ftpcmd_t ctr_cmds[] = {
     { "MKD", do_mkd },
     { "DELE", do_dele },
     { "RMD", do_rmd },
+    { "SIZE", do_size },
     { NULL, NULL },
 };
 
@@ -336,4 +337,23 @@ void do_rmd(session_t *sess)
 
     ftp_reply(sess, FTP_RMDIROK, "Remove directory operation success.");
 
+}
+
+void do_size(session_t *sess)
+{
+    struct stat sbuf;
+    if (lstat(sess->args, &sbuf) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "SIZE operation failed.");
+        return;
+    }
+
+    //只能求普通文件的size
+    if (!S_ISREG(sbuf.st_mode)) {
+        ftp_reply(sess, FTP_FILEFAIL, "SIZE operation failed.");
+        return;
+    }
+
+    char text[1024] = {0};
+    snprintf(text, sizeof(text), "%lu", sbuf.st_size);
+    ftp_reply(sess, FTP_SIZEOK, text);
 }
