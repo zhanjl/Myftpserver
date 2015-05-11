@@ -28,6 +28,8 @@ static ftpcmd_t ctr_cmds[] = {
     { "QUIT", do_quit },
     { "CWD", do_cwd },
     { "CDUP", do_cdup },
+    { "REST", do_rest },
+    { "MKD", do_mkd },
     { NULL, NULL },
 };
 
@@ -282,4 +284,33 @@ void do_cdup(session_t *sess)
         return;
     }
     ftp_reply(sess, FTP_CWDOK, "Directory successfully changed.");
+}
+
+void do_rest(session_t *sess)
+{
+    sess->restartpos = atoll(sess->args);
+
+    char text[1024] = {0};
+    snprintf(text, sizeof (text), "Restart position accepy(%lld)", sess->restartpos);
+    ftp_reply(sess, FTP_RESTOK, text);
+}
+
+void do_mkd(session_t *sess)
+{
+    if (mkdir(sess->args, 0777) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Create directory failed");
+        return;
+    }
+
+    char text[1024] = {0};
+    if (sess->args[0] == '/') {  //绝对路径
+        snprintf(text, sizeof(text), "%s created.", sess->args);
+    } else {
+        char tmp[1024] = {0};
+        if (getcwd(tmp, sizeof(tmp)) == NULL) {
+            ERR_EXIT("getcwd");
+        }
+        snprintf(text, sizeof(text), "%s/%s created.", tmp, sess->args);
+    }
+    ftp_reply(sess, FTP_MKDIROK, text);
 }

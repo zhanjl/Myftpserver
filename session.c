@@ -18,6 +18,7 @@ void session_init(session_t *sess)
     sess->p_addr = NULL;
     sess->sockfd = -1;
     sess->listenfd = -1;
+    sess->restartpos = 0;
 }
 
 void session_reset_command(session_t *sess)

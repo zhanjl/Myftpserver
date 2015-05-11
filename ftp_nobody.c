@@ -33,7 +33,7 @@ void handle_nobody(session_t *sess)
                 fprintf(stderr, "Unkown command\n");
                 exit(EXIT_FAILURE);
         }
-    } 
+    }
 }
 
 void set_nobody()
