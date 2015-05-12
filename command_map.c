@@ -35,6 +35,7 @@ static ftpcmd_t ctr_cmds[] = {
     { "SIZE", do_size },
     { "RNFR", do_rnfr },
     { "RNTO", do_rnto },
+    { "RETR", do_retr },
     { NULL, NULL },
 };
 
@@ -386,4 +387,83 @@ void do_rnto(session_t *sess)
     sess->rnfr_name = NULL;
 
     ftp_reply(sess, FTP_RENAMEOK, "Rename successful");
+}
+
+void do_retr(session_t *sess)
+{
+    //建立数据连接
+    if (get_trans_data_fd(sess) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Fail to build connection.");
+        return; 
+    }
+    
+    //打开文件
+    int fd;
+    fd = open(sess->args, O_RDONLY);
+    if (fd == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Fail to open file.");
+        //需不需要关闭数据连接?
+        return;
+    }
+    
+    //对文件加锁
+    if (lock_file_read(fd) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Fail to open file.");
+        return;
+    }
+    
+    //判断是否为普通文件
+    struct stat sbuf;
+    if (fstat(fd, &sbuf) == -1)
+        ERR_EXIT("fstat");
+
+    if (!S_ISREG(sbuf.st_mode)) {
+        ftp_reply(sess, FTP_FILEFAIL, "Can only download regular file.");
+        close(fd);
+        return;
+    }
+
+    //以二进制模式打开还是以ASCII模式打开
+    char text[1024] = {0};
+    if (sess->ascii_mode == 1)
+        snprintf(text, sizeof(text), "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, sbuf.st_size);
+    else
+        snprintf(text, sizeof(text), "Opening Binary mode data connection for %s (%lu bytes).", sess->args, sbuf.st_size);
+
+    ftp_reply(sess, FTP_DATACONN, text);
+    
+    //传输数据
+    char buf[4096] = {0};
+    int flag = 0;   //标识数据传输是否成功     
+    int ret;
+    while (1) {
+        ret = read(fd, buf, sizeof(buf));
+        if (ret == -1) {
+            if (errno == EINTR)
+                continue;
+            flag = 1;           //读文件错误
+            break;
+        }
+
+        if (ret == 0)   //正常结束
+            break;
+
+        if (writen(sess->sockfd, buf, ret) != ret) {  //写数据错误
+            flag = 2;
+            break;
+        }
+    }
+    if (unlock_file(fd) == -1)
+        ERR_EXIT("unlock_file");
+    close(fd);
+    close(sess->sockfd);
+    sess->sockfd = -1;
+
+    if (flag == 0)
+        ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
+    else if (flag == 1) //读文件错误
+        ftp_reply(sess, FTP_FILEFAIL, "Reading file failed");
+    else if (flag == 2) //write错误
+        ftp_reply(sess, FTP_FILEFAIL, "Writing file failed");
+
 }
