@@ -20,7 +20,7 @@ typedef struct {
     struct sockaddr_in *p_addr; //客户端发来的地址
     int     sockfd;     //数据传输fd
     int     listenfd;   //监听套接字，用于PASV模式
-    long long restartpos;
+    long long restartpos;   //断点续传位置
     char*   rnfr_name;
 } session_t;
 

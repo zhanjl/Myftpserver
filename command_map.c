@@ -423,12 +423,18 @@ void do_retr(session_t *sess)
         return;
     }
 
+    unsigned long filesize = sbuf.st_size;
+    long long offset = sess->restartpos;
+    filesize -= offset;
+
+    if (lseek(fd, offset, SEEK_SET) == -1)
+        ERR_EXIT("lseek");
     //以二进制模式打开还是以ASCII模式打开
     char text[1024] = {0};
     if (sess->ascii_mode == 1)
-        snprintf(text, sizeof(text), "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, sbuf.st_size);
+        snprintf(text, sizeof(text), "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, filesize);
     else
-        snprintf(text, sizeof(text), "Opening Binary mode data connection for %s (%lu bytes).", sess->args, sbuf.st_size);
+        snprintf(text, sizeof(text), "Opening Binary mode data connection for %s (%lu bytes).", sess->args, filesize);
 
     ftp_reply(sess, FTP_DATACONN, text);
     
