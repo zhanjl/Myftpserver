@@ -36,6 +36,8 @@ static ftpcmd_t ctr_cmds[] = {
     { "RNFR", do_rnfr },
     { "RNTO", do_rnto },
     { "RETR", do_retr },
+    { "SOTR", do_stor },
+    { "APPE", do_appe },
     { NULL, NULL },
 };
 
@@ -297,7 +299,7 @@ void do_rest(session_t *sess)
     sess->restartpos = atoll(sess->args);
 
     char text[1024] = {0};
-    snprintf(text, sizeof (text), "Restart position accepy(%lld)", sess->restartpos);
+    snprintf(text, sizeof (text), "Restart position accept(%lld)", sess->restartpos);
     ftp_reply(sess, FTP_RESTOK, text);
 }
 
@@ -472,4 +474,14 @@ void do_retr(session_t *sess)
     else if (flag == 2) //write错误
         ftp_reply(sess, FTP_FILEFAIL, "Writing file failed");
 
+}
+
+void do_stor(session_t *sess)
+{
+    upload_file(sess, 0);
+}
+
+void do_appe(session_t *sess)
+{
+    upload_file(sess, 1);
 }

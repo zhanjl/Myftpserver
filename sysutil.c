@@ -407,6 +407,22 @@ int lock_file_read(int fd) //加读锁
     return ret;     //如果返回-1,表示出错
 }
 
+int lock_file_write(int fd) //以阻塞方式加写锁
+{
+    struct flock file_lock;
+    file_lock.l_type = F_WRLCK;
+    file_lock.l_start = 0;
+    file_lock.l_whence = SEEK_SET;
+    file_lock.l_len = 0;
+
+    int ret;
+    do {
+        ret = fcntl(fd, F_SETLKW, &file_lock);  //以阻塞模式加锁
+    } while (ret == -1 && errno == EINTR);
+
+    return ret;     //如果返回-1,表示出错
+}
+
 int unlock_file(int fd)
 {
     struct flock file_lock;

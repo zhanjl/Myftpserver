@@ -235,3 +235,89 @@ static void get_pasv_data_fd(session_t *sess)
 
     sess->sockfd = priv_sock_recv_fd(sess->proto_fd);
 }
+
+void upload_file(session_t *sess, int is_appe) //上传文件
+{
+    //建立数据连接 
+    if (get_trans_data_fd(sess) == -1) {
+        ftp_reply(sess, FTP_UPLOADFAIL, "Failed to get data fd.");
+        return;
+    }
+
+    //打开文件
+    int fd = open(sess->args, O_WRONLY | O_CREAT, 0666);
+    if (fd == -1) {
+        ftp_reply(sess, FTP_UPLOADFAIL, "File open failed.");
+        return;
+    }
+    
+    //对文件加写锁
+    if (lock_file_write(fd) == -1) {
+        ftp_reply(sess, FTP_UPLOADFAIL, "File open failed.");
+        return;
+    }
+
+    long long offset = sess->restartpos;
+    unsigned long filesize = 0;
+    
+    //不是在文件末尾添加,则截断文件
+    if (!is_appe) {
+        ftruncate(fd, offset);
+        filesize = offset;
+        if (lseek(fd, offset, SEEK_SET) == -1)
+            ERR_EXIT("lseek");
+    } else {        //在文件末尾添加
+
+        if (lseek(fd, 0, SEEK_END) == -1)
+           ERR_EXIT("lseek");
+
+        //获取文件大小
+        struct stat sbuf;
+        if (fstat(fd, &sbuf) == -1) 
+            ERR_EXIT("fstat");
+        filesize = sbuf.st_size;
+    }
+
+    char text[1024] = {0};
+    if (sess->ascii_mode == 1)
+        snprintf(text, sizeof(text), "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, filesize);
+    else
+        snprintf(text, sizeof(text), "Opening Binary mode data connection for %s (%lu bytes).", sess->args, filesize);
+
+    ftp_reply(sess, FTP_DATACONN, text);
+
+    char buf[4096] = {0};
+    int flag = 0;
+    int ret;
+    while (1) {
+        ret = read(sess->sockfd, buf, sizeof(buf));
+        if (ret == -1) {
+            if (errno == EINTR)
+                continue;
+            flag = 1;
+            break;
+        }
+
+        if (ret == 0)
+            break;
+         
+        if (writen(fd, buf, ret) != ret) {
+            flag = 2;
+            break;
+        }
+    }
+    
+    //清理工作 
+    if (unlock_file(fd) == -1)
+        ERR_EXIT("unlock_file");
+    close(fd);
+    close(sess->sockfd);
+    sess->sockfd = -1;
+
+    if (flag == 0) 
+        ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
+    else if (flag == 1)
+        ftp_reply(sess, FTP_BADSENDNET, "Reading from Network failed.");
+    else 
+        ftp_reply(sess, FTP_BADSENDNET, "Writing to File failed.");
+}
