@@ -3,13 +3,12 @@
 #include "ftp_proto.h"
 #include "ftp_nobody.h"
 #include "priv_sock.h"
-
+#include "configure.h"
 void session_init(session_t *sess)
 {
     memset(sess->command, 0, sizeof(sess->command));
     memset(sess->comm, 0, sizeof(sess->comm));
     memset(sess->args, 0, sizeof(sess->args));
-    //memset(sess, 0, sizeof(struct session_t));
     sess->peerfd = -1;
     sess->nobody_fd = -1;
     sess->proto_fd = -1;
@@ -20,6 +19,11 @@ void session_init(session_t *sess)
     sess->listenfd = -1;
     sess->restartpos = 0;
     sess->rnfr_name = NULL;
+
+    sess->limits_max_upload = upload_max_rate;
+    sess->limits_max_download = download_max_rate;
+    sess->start_time_sec = 0;
+    sess->start_time_usec = 0;
 }
 
 void session_reset_command(session_t *sess)

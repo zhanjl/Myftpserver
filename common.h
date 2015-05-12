@@ -21,6 +21,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <signal.h>
+#include <sys/time.h>
 #define ERR_EXIT(m) \
         do { \
         perror(m);\

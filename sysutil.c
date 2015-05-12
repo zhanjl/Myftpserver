@@ -436,3 +436,35 @@ int unlock_file(int fd)
 
     return ret;
 }
+
+//定义一个全局变量
+static struct timeval tv = {0, 0};
+
+int get_cur_time_sec()     //秒
+{
+    if (gettimeofday(&tv, NULL) == -1)
+        ERR_EXIT("gettimeofday");
+    return tv.tv_sec;
+}
+
+int get_cur_time_usec()    //微秒
+{
+    return tv.tv_usec;
+}
+
+int nano_sleep(double t)   //睡眠t秒
+{
+    int sec = (time_t)t;
+    int nsec = (t - sec) * 1000000000;
+
+    struct timespec ts;
+    ts.tv_sec = sec;
+    ts.tv_nsec = nsec;
+    int ret;
+
+    do {
+        ret = nanosleep(&ts, &ts);
+    } while (ret == -1 && errno == EINTR);
+
+    return ret;
+}

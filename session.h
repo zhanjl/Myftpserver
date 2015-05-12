@@ -21,7 +21,13 @@ typedef struct {
     int     sockfd;     //数据传输fd
     int     listenfd;   //监听套接字，用于PASV模式
     long long restartpos;   //断点续传位置
-    char*   rnfr_name;
+    char*   rnfr_name;  //文件重命名使用
+    
+     
+    int     limits_max_upload;  //最大上传速度
+    int     limits_max_download;//最大下载速度
+    int     start_time_sec;     //开始的秒数
+    int     start_time_usec;    //开始的微妙数
 } session_t;
 
 //初始化session

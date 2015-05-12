@@ -5,6 +5,8 @@
 #include "configure.h"
 #include "command_map.h"
 #include "priv_sock.h"
+
+
 const char *statbuf_get_perms(struct stat *sbuf);
 const char *statbuf_get_date(struct stat *sbuf);
 const char *statbuf_get_filename(struct stat *sbuf, const char* name);
@@ -236,6 +238,139 @@ static void get_pasv_data_fd(session_t *sess)
     sess->sockfd = priv_sock_recv_fd(sess->proto_fd);
 }
 
+static void limit_curr_rate(session_t *sess, int nbytes, int is_upload)
+{
+    int curr_time_sec = get_cur_time_sec();
+    int curr_time_usec = get_cur_time_usec();
+
+    double elapsed = 0.0;
+    elapsed += (curr_time_sec - sess->start_time_sec);
+    elapsed += (curr_time_usec - sess->start_time_usec) / (double)1000000;
+    
+    if (elapsed < 0.000001)     //小于1毫秒
+        elapsed = 0.001;
+
+    double curr_rate = nbytes / elapsed;    //当前传输速度
+
+    double rate_radio = 0.0;    //用来计算睡眠时间
+    if (is_upload) {            //上传限速
+        //需要进行限速
+        if (sess->limits_max_upload > 0 && curr_rate > sess->limits_max_upload) {
+            rate_radio = curr_rate / sess->limits_max_upload; 
+        } else {    //不需要进行限速
+            sess->start_time_sec = get_cur_time_sec(); 
+            sess->start_time_usec = get_cur_time_usec();
+            return;
+        }
+    } else {                    //下载限速
+        //需要进行限速
+        if (sess->limits_max_download > 0 && curr_rate > sess->limits_max_download) {
+            rate_radio = curr_rate / sess->limits_max_download; 
+        } else {    //不需要进行限速
+            sess->start_time_sec = get_cur_time_sec(); 
+            sess->start_time_usec = get_cur_time_usec();
+            return;
+        }
+    }
+
+    //计算需要睡眠的时间
+    double sleep_time = (rate_radio - 1) * elapsed;
+
+    if (nano_sleep(sleep_time) == -1)
+        ERR_EXIT("nano_sleep");
+
+    sess->start_time_sec = get_cur_time_sec(); 
+    sess->start_time_usec = get_cur_time_usec();
+}
+
+void download_file(session_t *sess) //下载文件
+{
+    //建立数据连接
+    if (get_trans_data_fd(sess) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Fail to build connection.");
+        return; 
+    }
+    
+    //打开文件
+    int fd;
+    fd = open(sess->args, O_RDONLY);
+    if (fd == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Fail to open file.");
+        //需不需要关闭数据连接?
+        return;
+    }
+    
+    //对文件加锁
+    if (lock_file_read(fd) == -1) {
+        ftp_reply(sess, FTP_FILEFAIL, "Fail to open file.");
+        return;
+    }
+    
+    //判断是否为普通文件
+    struct stat sbuf;
+    if (fstat(fd, &sbuf) == -1)
+        ERR_EXIT("fstat");
+
+    if (!S_ISREG(sbuf.st_mode)) {
+        ftp_reply(sess, FTP_FILEFAIL, "Can only download regular file.");
+        close(fd);
+        return;
+    }
+
+    unsigned long filesize = sbuf.st_size;
+    long long offset = sess->restartpos;
+    filesize -= offset;
+
+    if (lseek(fd, offset, SEEK_SET) == -1)
+        ERR_EXIT("lseek");
+    //以二进制模式打开还是以ASCII模式打开
+    char text[1024] = {0};
+    if (sess->ascii_mode == 1)
+        snprintf(text, sizeof(text), "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, filesize);
+    else
+        snprintf(text, sizeof(text), "Opening Binary mode data connection for %s (%lu bytes).", sess->args, filesize);
+
+    ftp_reply(sess, FTP_DATACONN, text);
+    
+    //传输数据
+    char buf[4096] = {0};
+    int flag = 0;   //标识数据传输是否成功     
+    int ret;
+
+    sess->start_time_sec = get_cur_time_sec();
+    sess->start_time_usec = get_cur_time_usec();
+    while (1) {
+        ret = read(fd, buf, sizeof(buf));
+        if (ret == -1) {
+            if (errno == EINTR)
+                continue;
+            flag = 1;           //读文件错误
+            break;
+        }
+
+        if (ret == 0)   //正常结束
+            break;
+         
+        if (writen(sess->sockfd, buf, ret) != ret) {  //写数据错误
+            flag = 2;
+            break;
+        }
+        limit_curr_rate(sess, ret, 0);  //限速函数
+    }
+    if (unlock_file(fd) == -1)
+        ERR_EXIT("unlock_file");
+    close(fd);
+    close(sess->sockfd);
+    sess->sockfd = -1;
+
+    if (flag == 0)
+        ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
+    else if (flag == 1) //读文件错误
+        ftp_reply(sess, FTP_FILEFAIL, "Reading file failed");
+    else if (flag == 2) //write错误
+        ftp_reply(sess, FTP_FILEFAIL, "Writing file failed");
+}
+
 void upload_file(session_t *sess, int is_appe) //上传文件
 {
     //建立数据连接 
@@ -289,6 +424,8 @@ void upload_file(session_t *sess, int is_appe) //上传文件
     char buf[4096] = {0};
     int flag = 0;
     int ret;
+    sess->start_time_sec = get_cur_time_sec();
+    sess->start_time_usec = get_cur_time_usec();
     while (1) {
         ret = read(sess->sockfd, buf, sizeof(buf));
         if (ret == -1) {
@@ -305,8 +442,9 @@ void upload_file(session_t *sess, int is_appe) //上传文件
             flag = 2;
             break;
         }
+        limit_curr_rate(sess, ret, 1);
     }
-    
+     
     //清理工作 
     if (unlock_file(fd) == -1)
         ERR_EXIT("unlock_file");
