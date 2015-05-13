@@ -4,6 +4,7 @@
 #include "configure.h"
 #define     LISTENPORT      9981
 
+extern session_t *p_sess;
 int main(int argc, char *argv[])
 {
 
@@ -32,8 +33,10 @@ int main(int argc, char *argv[])
         //    printf("don't has connection in %d seconds\n", accept_timeout);
             continue;
         }
+
         printf("connect success\n");
         session_init(&sess);
+        p_sess = &sess;
         pid = fork();
         if (pid == -1) {
             ERR_EXIT("fork error");

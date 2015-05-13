@@ -24,6 +24,7 @@ void session_init(session_t *sess)
     sess->limits_max_download = download_max_rate;
     sess->start_time_sec = 0;
     sess->start_time_usec = 0;
+    sess->has_translate_data = 0;
 }
 
 void session_reset_command(session_t *sess)

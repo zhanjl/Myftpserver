@@ -296,6 +296,7 @@ void download_file(session_t *sess) //下载文件
 
     sess->start_time_sec = get_cur_time_sec();
     sess->start_time_usec = get_cur_time_usec();
+    sess->has_translate_data = 1;
     while (1) {
         ret = read(fd, buf, sizeof(buf));
         if (ret == -1) {

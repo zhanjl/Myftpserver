@@ -28,6 +28,8 @@ typedef struct {
     int     limits_max_download;//最大下载速度
     int     start_time_sec;     //开始的秒数
     int     start_time_usec;    //开始的微妙数
+
+    int     has_translate_data;
 } session_t;
 
 //初始化session

@@ -4,11 +4,14 @@
 #include "strutil.h"
 #include "ftp_codes.h"
 #include "command_map.h"
-
+#include "trans_ctrl.h"
 void handle_proto(session_t *sess)
 {
     //向客户端发送初始化信息
     ftp_reply(sess, FTP_GREET, "mini ftpserver0.1"); 
+    setup_signal_alarm();
+    start_signal_alarm();
+
     while (1) {
         //清空命令数组
         session_reset_command(sess);

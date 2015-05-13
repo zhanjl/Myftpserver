@@ -26,7 +26,6 @@ static struct parseconf_uint_setting
     { "accept_timeout", &accept_timeout},
     { "connect_timeout", &connect_timeout},
     { "idle_session_timeout", &idle_session_timeout},
-    { "data_connection_timeout", &data_connection_timeout},
     { "local_umask", &local_umask},
     { "upload_max_rate", &upload_max_rate},
     { "download_max_rate", &download_max_rate},
