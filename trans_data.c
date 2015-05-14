@@ -360,12 +360,10 @@ void upload_file(session_t *sess, int is_appe) //上传文件
     }
 
     long long offset = sess->restartpos;
-    unsigned long filesize = 0;
     
     //不是在文件末尾添加,则截断文件
     if (!is_appe) {
         ftruncate(fd, offset);
-        filesize = offset;
         if (lseek(fd, offset, SEEK_SET) == -1)
             ERR_EXIT("lseek");
     } else {        //在文件末尾添加
@@ -377,16 +375,9 @@ void upload_file(session_t *sess, int is_appe) //上传文件
         struct stat sbuf;
         if (fstat(fd, &sbuf) == -1) 
             ERR_EXIT("fstat");
-        filesize = sbuf.st_size;
     }
 
-    char text[1024] = {0};
-    if (sess->ascii_mode == 1)
-        snprintf(text, sizeof(text), "Opening ASCII mode data connection for %s (%lu bytes).", sess->args, filesize);
-    else
-        snprintf(text, sizeof(text), "Opening Binary mode data connection for %s (%lu bytes).", sess->args, filesize);
-
-    ftp_reply(sess, FTP_DATACONN, text);
+    ftp_reply(sess, FTP_DATACONN, "OK to send");
 
     char buf[4096] = {0};
     int flag = 0;
