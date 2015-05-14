@@ -5,6 +5,7 @@
 #include "configure.h"
 #include "ftp_codes.h"
 #include "command_map.h"
+#include "strutil.h"
 
 session_t *p_sess = NULL;
 
@@ -79,3 +80,31 @@ static void handle_signal_alarm(int signo)
     p_sess->has_translate_data = 0;
     start_signal_alarm();
 }
+
+static void handle_signal_sigurg(int signo);
+void setup_signal_sigurg()
+{
+    if (signal(SIGURG, handle_signal_sigurg) == SIG_ERR)
+        ERR_EXIT("signal");
+}
+
+static void handle_signal_sigurg(int signo)
+{
+    char    cmdline[1024] = {0};
+    int ret = readline(p_sess->peerfd, cmdline, sizeof(cmdline));
+    if (ret <= 0)
+       ERR_EXIT("readline");
+    
+    str_trim_crlf(cmdline);
+    str_upper(cmdline);
+    
+    if (strcmp("ABOR", cmdline) == 0 ||
+           strcmp("\377\364\377\362ABOR", cmdline) == 0) {
+        p_sess->is_receive_abort = 1;
+        close(p_sess->sockfd);
+        p_sess->sockfd = -1;
+    } else {
+        ftp_reply(p_sess, FTP_BADCMD, "Unkown command");
+    }
+}
+

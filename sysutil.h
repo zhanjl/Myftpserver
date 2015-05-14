@@ -49,4 +49,10 @@ int get_cur_time_sec();     //秒
 int get_cur_time_usec();    //微秒
 
 int nano_sleep(double t);   //睡眠t秒
+
+//打开带外数据函数
+//设置sockfd，使其接受带外数据
+void activate_oobinline(int sockfd);
+//开启SIGURG信号
+void activate_signal_sigurg(int sockfd);
 #endif  /*SYS_UTIL_H*/

@@ -468,3 +468,16 @@ int nano_sleep(double t)   //睡眠t秒
 
     return ret;
 }
+
+void activate_oobinline(int sockfd)
+{
+    int oob_inline = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_OOBINLINE, &oob_inline, sizeof(oob_inline)) == -1)
+        ERR_EXIT("setsockopt oob_inline");
+}
+
+void activate_signal_sigurg(int sockfd)
+{
+    if (fcntl(sockfd, F_SETOWN, getpid()) == -1)
+        ERR_EXIT("fcntl sigurg");
+}

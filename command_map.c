@@ -38,6 +38,7 @@ static ftpcmd_t ctr_cmds[] = {
     { "RETR", do_retr },
     { "SOTR", do_stor },
     { "APPE", do_appe },
+    { "ABOR", do_abor },
     { NULL, NULL },
 };
 
@@ -404,4 +405,9 @@ void do_stor(session_t *sess)
 void do_appe(session_t *sess)
 {
     upload_file(sess, 1);
+}
+
+void do_abor(session_t *sess)
+{
+    ftp_reply(sess, FTP_ABOR_NOCONN, "No transfer to ABOR");
 }

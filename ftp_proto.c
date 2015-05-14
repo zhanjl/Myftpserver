@@ -9,9 +9,13 @@ void handle_proto(session_t *sess)
 {
     //向客户端发送初始化信息
     ftp_reply(sess, FTP_GREET, "mini ftpserver0.1"); 
+    //时钟中断
     setup_signal_alarm();
     start_signal_alarm();
-
+    //带外数据
+    setup_signal_sigurg();
+    activate_oobinline(sess->peerfd);
+    activate_signal_sigurg(sess->peerfd);
     while (1) {
         //清空命令数组
         session_reset_command(sess);

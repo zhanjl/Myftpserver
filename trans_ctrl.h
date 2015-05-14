@@ -9,4 +9,6 @@ void limit_curr_rate(session_t *sess, int nbytes, int is_upload);
 void setup_signal_alarm();
 void start_signal_alarm();
 
+//设置SIGURG信号的处理函数
+void setup_signal_sigurg();
 #endif  //TRANS_CTRL_H

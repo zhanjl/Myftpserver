@@ -298,6 +298,13 @@ void download_file(session_t *sess) //下载文件
     sess->start_time_usec = get_cur_time_usec();
     sess->has_translate_data = 1;
     while (1) {
+        //判断是否收到ABOR命令
+        if (sess->is_receive_abort == 1) {
+            flag = 3;
+            ftp_reply(sess, FTP_BADSENDNET, "Interupt downloading file.");
+            sess->is_receive_abort = 0;
+            break;
+        }
         ret = read(fd, buf, sizeof(buf));
         if (ret == -1) {
             if (errno == EINTR)
@@ -327,6 +334,8 @@ void download_file(session_t *sess) //下载文件
         ftp_reply(sess, FTP_FILEFAIL, "Reading file failed");
     else if (flag == 2) //write错误
         ftp_reply(sess, FTP_FILEFAIL, "Writing file failed");
+    else if (flag == 3) //收到ABOR命令
+        ftp_reply(sess, FTP_ABOROK, "ABOR successful");
 }
 
 void upload_file(session_t *sess, int is_appe) //上传文件
@@ -385,6 +394,12 @@ void upload_file(session_t *sess, int is_appe) //上传文件
     sess->start_time_sec = get_cur_time_sec();
     sess->start_time_usec = get_cur_time_usec();
     while (1) {
+        if (sess->is_receive_abort == 1) {
+            flag = 3;
+            ftp_reply(sess, FTP_BADSENDNET, "Interupt uploading file.");
+            sess->is_receive_abort = 0;
+            break;
+        }
         ret = read(sess->sockfd, buf, sizeof(buf));
         if (ret == -1) {
             if (errno == EINTR)
@@ -414,6 +429,8 @@ void upload_file(session_t *sess, int is_appe) //上传文件
         ftp_reply(sess, FTP_TRANSFEROK, "Transfer complete.");
     else if (flag == 1)
         ftp_reply(sess, FTP_BADSENDNET, "Reading from Network failed.");
-    else 
+    else if (flag == 2)
         ftp_reply(sess, FTP_BADSENDNET, "Writing to File failed.");
+    else if (flag == 3)
+        ftp_reply(sess, FTP_ABOROK, "ABOR successful");
 }
