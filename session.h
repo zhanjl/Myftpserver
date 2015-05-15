@@ -31,6 +31,7 @@ typedef struct {
 
     int     has_translate_data; //表示是否在传输数据
     int     is_receive_abort;   //表示是否收到ABOR命令
+    unsigned int curr_clients;  //当前连接到服务器的用户数量
 } session_t;
 
 //初始化session
