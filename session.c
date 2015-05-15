@@ -27,6 +27,7 @@ void session_init(session_t *sess)
     sess->has_translate_data = 0;
     sess->is_receive_abort = 0;
     sess->curr_clients = 0;
+    sess->curr_ip_clients = 0;
 }
 
 void session_reset_command(session_t *sess)
