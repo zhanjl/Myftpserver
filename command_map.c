@@ -39,6 +39,8 @@ static ftpcmd_t ctr_cmds[] = {
     { "SOTR", do_stor },
     { "APPE", do_appe },
     { "ABOR", do_abor },
+    { "HELP", do_help },
+    { "STAT", do_stat },
     { NULL, NULL },
 };
 
@@ -98,7 +100,7 @@ void do_pass(session_t *sess)
         ftp_reply(sess, FTP_LOGINERR, "Login incorrect.");
         return;
     }    
-
+    strcpy(sess->username, pwd->pw_name);
     struct spwd *spd;
     if ((spd = getspnam(pwd->pw_name)) == NULL) {
         ftp_reply(sess, FTP_LOGINERR, "Login incorrect.");
@@ -410,4 +412,27 @@ void do_appe(session_t *sess)
 void do_abor(session_t *sess)
 {
     ftp_reply(sess, FTP_ABOR_NOCONN, "No transfer to ABOR");
+}
+
+void do_help(session_t *sess)
+{
+    ftp_lreply(sess, FTP_HELP, "The following commands are recognized.");    
+    writen(sess->peerfd, "USER PASS TYPE PWD FEAT SYST PORT LIST\r\n", sizeof("USER PASS TYPE PWD FEAT SYST PORT LIST\r\n"));
+    writen(sess->peerfd, "PASV NLST NOOP CWD CDUP REST MKD\r\n", sizeof( "PASV NLST NOOP CWD CDUP REST MKD\r\n"));
+    writen(sess->peerfd, "DELE RMD SIZE RNFR RNTO RETR SOTR APPE ABOR\r\n", sizeof("PASV NLST NOOP CWD CDUP REST MKD\r\n"));
+    ftp_reply(sess, FTP_HELP, "Help OK.");
+}
+ 
+void do_stat(session_t *sess)
+{
+    ftp_lreply(sess, FTP_STATOK, "FTP server status.");
+
+    char text[1024] = {0};
+    struct in_addr  in;
+    in.s_addr = sess->ip;
+    snprintf(text, sizeof(text), "  Connected to %s\r\n", inet_ntoa(in));
+    writen(sess->peerfd, text, strlen(text));
+    snprintf(text, sizeof(text), "  Logged in %s\r\n", sess->username);
+    writen(sess->peerfd, text, strlen(text));
+    ftp_reply(sess, FTP_STATOK, "End of status");
 }

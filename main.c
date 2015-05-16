@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
         num_of_clients++;
         sess.curr_clients = num_of_clients;
         sess.curr_ip_clients = add_ip_to_hash(ip_to_clients, ip);
+        sess.ip = ip;
         p_sess = &sess;
         pid = fork();
         if (pid == -1) {

@@ -33,6 +33,9 @@ typedef struct {
     int     is_receive_abort;   //表示是否收到ABOR命令
     unsigned int curr_clients;  //当前连接到服务器的用户数量
     unsigned int curr_ip_clients;   //当前ip的客户数量
+
+    uint32_t    ip;             //客户端ip地址
+    char     username[100];     //用户名
 } session_t;
 
 //初始化session

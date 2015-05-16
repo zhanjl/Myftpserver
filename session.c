@@ -28,6 +28,8 @@ void session_init(session_t *sess)
     sess->is_receive_abort = 0;
     sess->curr_clients = 0;
     sess->curr_ip_clients = 0;
+    sess->ip = 0;
+    memset(sess->username, 0, sizeof(sess->username));
 }
 
 void session_reset_command(session_t *sess)
