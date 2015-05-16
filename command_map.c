@@ -5,6 +5,8 @@
 #include "configure.h"
 #include "trans_data.h"
 #include "priv_sock.h"
+#include "trans_ctrl.h"
+#include "strutil.h"
 
 typedef struct ftpcmd
 {
@@ -41,6 +43,7 @@ static ftpcmd_t ctr_cmds[] = {
     { "ABOR", do_abor },
     { "HELP", do_help },
     { "STAT", do_stat },
+    { "SITE", do_site },
     { NULL, NULL },
 };
 
@@ -435,4 +438,22 @@ void do_stat(session_t *sess)
     snprintf(text, sizeof(text), "  Logged in %s\r\n", sess->username);
     writen(sess->peerfd, text, strlen(text));
     ftp_reply(sess, FTP_STATOK, "End of status");
+}
+
+void do_site(session_t *sess)
+{
+    char cmd[1024] = {0};
+    char arg[1024] = {0};
+
+    str_split(sess->args, cmd, arg, ' ');
+    str_upper(cmd);
+
+    if (strcmp("CHMOD", cmd) == 0)
+        do_site_chmod(sess, arg);
+    else if (strcmp("UMASK", cmd) == 0)
+        do_site_umask(sess, arg);
+    else if (strcmp("HELP", cmd) == 0)
+        do_site_help(sess);
+    else
+        ftp_reply(sess, FTP_BADCMD, "Unkown SITE command.");
 }
